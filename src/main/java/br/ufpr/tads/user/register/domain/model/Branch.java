@@ -2,6 +2,7 @@ package br.ufpr.tads.user.register.domain.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 
 import java.util.UUID;
 
@@ -17,6 +18,7 @@ public class Branch {
 
     @ManyToOne
     @JoinColumn(name = "STORE_ID", nullable = false)
+    @ToString.Exclude
     private Store store;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)

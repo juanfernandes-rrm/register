@@ -6,6 +6,7 @@ import br.ufpr.tads.user.register.domain.model.Store;
 import br.ufpr.tads.user.register.domain.repository.BranchRepository;
 import br.ufpr.tads.user.register.domain.repository.StoreRepository;
 import br.ufpr.tads.user.register.domain.response.AddressDTO;
+import br.ufpr.tads.user.register.domain.response.BranchDTO;
 import br.ufpr.tads.user.register.domain.response.StoreDTO;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class StoreService {
@@ -35,6 +37,11 @@ public class StoreService {
 
         return existingStore.map(store -> addNewBranchToExistingStore(store, storeDTO))
                 .orElseGet(() -> createNewStoreWithBranch(storeDTO));
+    }
+
+    public BranchDTO getStoreBranch(UUID correlationId) {
+        Optional<Branch> branchOptional = branchRepository.findByCorrelationId(correlationId);
+        return branchOptional.map(this::mapBranchToDTO).orElse(null);
     }
 
     private Branch addNewBranchToExistingStore(Store store, StoreDTO storeDTO) {
@@ -74,6 +81,30 @@ public class StoreService {
         branch.setAddress(address);
         branch.setCorrelationId(storeDTO.getId());
         return branch;
+    }
+
+    private BranchDTO mapBranchToDTO(Branch branch) {
+        Address address = branch.getAddress();
+        AddressDTO addressDTO = new AddressDTO();
+        addressDTO.setStreet(address.getStreet());
+        addressDTO.setNumber(address.getNumber());
+        addressDTO.setNeighborhood(address.getNeighborhood());
+        addressDTO.setCity(address.getCity());
+        addressDTO.setState(address.getState());
+
+        Store store = branch.getStore();
+        StoreDTO storeDTO = new StoreDTO();
+        storeDTO.setId(store.getId());
+        storeDTO.setCnpj(store.getCNPJ());
+        storeDTO.setName(store.getName());
+        storeDTO.setAddress(addressDTO);
+
+        BranchDTO branchDTO = new BranchDTO();
+        branchDTO.setId(branch.getId());
+        branchDTO.setStore(storeDTO);
+        branchDTO.setCorrelationId(branch.getCorrelationId());
+
+        return branchDTO;
     }
 
 }
