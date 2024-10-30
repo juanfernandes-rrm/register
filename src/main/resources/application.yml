@@ -1,5 +1,14 @@
 server:
   port: 8084
+
+keycloak:
+  auth-server-url: http://localhost:8080
+  realm: master
+  resource: register
+  credentials:
+    secret: 8k7ToiCjycdsllNGhV7YHCKBkKVRrTUU
+  public-client: false
+
 spring:
   rabbitmq:
     host: localhost
@@ -10,6 +19,10 @@ spring:
     url: jdbc:mysql://localhost:3306/user_db?createIfNotExists=true
     username: myapp_user
     password: myapp_password
+    #    To use local
+    #    url: jdbc:mysql://localhost:3306/register_db?createIfNotExists=true
+    #    username: root
+    #    password: rootpassword
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect

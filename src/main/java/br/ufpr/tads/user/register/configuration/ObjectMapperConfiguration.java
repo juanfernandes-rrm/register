@@ -1,4 +1,4 @@
-package br.ufpr.tads.user.register.application;
+package br.ufpr.tads.user.register.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
