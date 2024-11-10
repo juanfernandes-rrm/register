@@ -27,9 +27,9 @@ public class KeycloakConfiguration {
        return KeycloakBuilder.builder()
                 .serverUrl(authServerUrl)
                 .realm(realm)
-                .clientId("admin-cli")
-                .password("admin")
-                .username("admin")
+                .clientId(resource)
+                .clientSecret(secret)
+                .grantType(OAuth2Constants.CLIENT_CREDENTIALS)
                 .build();
     }
 }

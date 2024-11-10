@@ -14,10 +14,11 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "customers")
+@Table(name = "CUSTOMER")
 public class Customer {
 
     @Id
+    @Column(name = "ID")
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
@@ -25,12 +26,14 @@ public class Customer {
     private UUID keycloakId;
 
     @Column(name = "USERNAME", nullable = false)
-    private String username;
+    private String firstName;
+
+    @Column(name = "LAST_NAME", nullable = false)
+    private String lastName;
 
     @Column(name = "EMAIL", unique = true, nullable = false)
     private String email;
 
-    @Column(name = "PASSWORD", nullable = false)
-    private String password;
-
+    @Column(name = "URL_PHOTO")
+    private String urlPhoto;
 }

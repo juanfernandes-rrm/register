@@ -33,15 +33,19 @@ public class KeycloakUserService {
 
         UserRepresentation user = new UserRepresentation();
         user.setEnabled(true);
-        user.setUsername(userDTO.getUsername());
+        user.setUsername(userDTO.getFirstName());
+        user.setFirstName(userDTO.getFirstName());
+        user.setLastName(userDTO.getLastName());
         user.setEmail(userDTO.getEmail());
         user.setCredentials(Collections.singletonList(credential));
         user.setEmailVerified(false);
 
+        keycloak.tokenManager().getAccessTokenString();
+
         try (Response response = keycloak.realm(realm).users().create(user)) {
             if (Objects.equals(201, response.getStatus())) {
                 String userId = extractUserIdFromLocation(response);
-                keycloakRoleService.assignRole(getUsersResource().get(userId), "ADMIN");
+                keycloakRoleService.assignRole(getUsersResource().get(userId), "CUSTOMER");
                 log.info("User successful created: " + userId);
                 return userId;
             } else {
@@ -75,6 +79,10 @@ public class KeycloakUserService {
     private String extractUserIdFromLocation(Response response) {
         String locationHeader = response.getHeaderString("Location");
         return locationHeader != null ? locationHeader.substring(locationHeader.lastIndexOf('/') + 1) : null;
+    }
+
+    public String getServiceAccountToken() {
+        return keycloak.tokenManager().getAccessTokenString();
     }
 
 }

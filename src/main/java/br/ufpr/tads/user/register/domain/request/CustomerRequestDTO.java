@@ -9,7 +9,10 @@ import lombok.Data;
 public class CustomerRequestDTO {
 
     @NotBlank(message = "name is required")
-    private String username;
+    private String firstName;
+
+    @NotBlank(message = "name is required")
+    private String lastName;
 
     @NotBlank(message = "e-mail is required")
     @Email(message = "Invalid e-mail")
@@ -17,5 +20,7 @@ public class CustomerRequestDTO {
 
     @NotBlank(message = "password is required")
     private String password;
+
+    private String urlPhoto;
 
 }

@@ -3,10 +3,10 @@ server:
 
 keycloak:
   auth-server-url: http://localhost:8080
-  realm: master
+  realm: nota-social
   resource: register
   credentials:
-    secret: 8k7ToiCjycdsllNGhV7YHCKBkKVRrTUU
+    secret: iweNvYX3hUvcD0kSTLj6XZwbAnJ5U430
   public-client: false
 
 spring:
@@ -16,13 +16,13 @@ spring:
     username: guest
     password: guest
   datasource:
-    url: jdbc:mysql://localhost:3306/user_db?createIfNotExists=true
-    username: myapp_user
-    password: myapp_password
+#    url: jdbc:mysql://localhost:3306/user_db?createIfNotExists=true
+#    username: myapp_user
+#    password: myapp_password
     #    To use local
-    #    url: jdbc:mysql://localhost:3306/register_db?createIfNotExists=true
-    #    username: root
-    #    password: rootpassword
+    url: jdbc:mysql://localhost:3306/register_db?createIfNotExists=true
+    username: root
+    password: rootpassword
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
@@ -40,3 +40,7 @@ broker:
   queue:
     receipt-scan:
       name: default.store
+
+social:
+  service:
+    url: http://localhost:8085

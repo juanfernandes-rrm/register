@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/register")
+@RequestMapping("/account/user")
 public class UserController {
 
     @Autowired
@@ -30,9 +30,9 @@ public class UserController {
         }
     }
 
-    @GetMapping("/{id}")
-    public CustomerResponseDTO getUser(@PathVariable UUID id) {
-        return customerService.getCustomerById(id);
+    @GetMapping("/{keycloakId}")
+    public CustomerResponseDTO getUser(@PathVariable String keycloakId) {
+        return customerService.getCustomerByKeycloakId(UUID.fromString(keycloakId));
     }
 
 }
