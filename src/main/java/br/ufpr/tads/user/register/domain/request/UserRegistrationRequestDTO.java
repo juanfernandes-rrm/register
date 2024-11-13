@@ -1,11 +1,18 @@
 package br.ufpr.tads.user.register.domain.request;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-//TODO: adicionar validação de campos
 public class UserRegistrationRequestDTO {
-    private String username;
+
+    @NotBlank(message = "e-mail is required")
+    @Email(message = "Invalid e-mail")
     private String email;
+
+    @NotBlank(message = "password is required")
     private String password;
+
+    private String urlPhoto;
 }

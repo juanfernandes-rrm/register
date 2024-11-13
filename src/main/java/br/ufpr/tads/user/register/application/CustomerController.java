@@ -1,6 +1,6 @@
 package br.ufpr.tads.user.register.application;
 
-import br.ufpr.tads.user.register.domain.request.CustomerRequestDTO;
+import br.ufpr.tads.user.register.domain.request.CustomerAccountRequestDTO;
 import br.ufpr.tads.user.register.domain.service.CustomerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +21,10 @@ public class CustomerController {
     private CustomerService customerService;
 
     @PostMapping
-    public ResponseEntity<?> registerCustomer(@RequestBody CustomerRequestDTO customerRequestDTO) {
+    public ResponseEntity<?> registerCustomer(@RequestBody CustomerAccountRequestDTO customerAccountRequestDTO) {
         try {
-            log.info("Registering user {}", customerRequestDTO);
-            return ResponseEntity.ok(customerService.registerCustomer(customerRequestDTO));
+            log.info("Registering user {}", customerAccountRequestDTO);
+            return ResponseEntity.ok(customerService.registerCustomer(customerAccountRequestDTO));
         } catch (Exception e) {
             log.info("User registration failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());

@@ -5,10 +5,13 @@ import br.ufpr.tads.user.register.domain.model.Branch;
 import br.ufpr.tads.user.register.domain.model.Store;
 import br.ufpr.tads.user.register.domain.repository.BranchRepository;
 import br.ufpr.tads.user.register.domain.repository.StoreRepository;
+import br.ufpr.tads.user.register.domain.request.StoreAccountRequestDTO;
 import br.ufpr.tads.user.register.domain.response.AddressDTO;
 import br.ufpr.tads.user.register.domain.response.BranchDTO;
+import br.ufpr.tads.user.register.domain.response.StoreAccountResponseDTO;
 import br.ufpr.tads.user.register.domain.response.StoreDTO;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class StoreService {
 
@@ -24,6 +28,35 @@ public class StoreService {
 
     @Autowired
     private BranchRepository branchRepository;
+
+    @Autowired
+    private KeycloakUserService keycloakUserService;
+
+    public StoreAccountResponseDTO registerStore(StoreAccountRequestDTO storeAccountRequestDTO) {
+        Optional<Store> optionalStore = storeRepository.findByCNPJ(storeAccountRequestDTO.getCnpj());
+
+        if (optionalStore.isEmpty()) {
+            UUID storeAccountId = keycloakUserService.registerUser(storeAccountRequestDTO);
+            Store newStoreWithoutBranch = createNewStoreWithoutBranch(storeAccountRequestDTO, storeAccountId);
+            return StoreAccountResponseDTO.mapToDTO(newStoreWithoutBranch);
+        }
+
+        Store store = optionalStore.get();
+        if (store.getKeycloakId() == null) {
+            UUID storeAccountId = keycloakUserService.registerUser(storeAccountRequestDTO);
+            log.info("Store with CNPJ {} exists without an associated account. Associating with new account {}",
+                    storeAccountRequestDTO.getCnpj(), storeAccountId);
+
+            store.setKeycloakId(storeAccountId);
+            store.setEmail(storeAccountRequestDTO.getEmail());
+            store.setUrlPhoto(storeAccountRequestDTO.getUrlPhoto());
+            storeRepository.save(store);
+
+            return StoreAccountResponseDTO.mapToDTO(store);
+        }
+
+        throw new RuntimeException("Store with CNPJ " + storeAccountRequestDTO.getCnpj() + " already exists and has an associated account.");
+    }
 
     @Transactional
     public Branch createOrUpdateStore(StoreDTO storeDTO) {
@@ -42,6 +75,12 @@ public class StoreService {
     public BranchDTO getStoreBranch(UUID correlationId) {
         Optional<Branch> branchOptional = branchRepository.findByCorrelationId(correlationId);
         return branchOptional.map(this::mapBranchToDTO).orElse(null);
+    }
+
+    public StoreAccountResponseDTO getStoreAccountInfo(UUID keycloakId) {
+        Store store = storeRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new RuntimeException("Store not found with Keycloak ID: " + keycloakId));
+        return StoreAccountResponseDTO.mapToDTO(store);
     }
 
     private Branch addNewBranchToExistingStore(Store store, StoreDTO storeDTO) {
@@ -66,6 +105,17 @@ public class StoreService {
 
         storeRepository.save(newStore);
         return newBranch;
+    }
+
+    private Store createNewStoreWithoutBranch(StoreAccountRequestDTO storeDTO, UUID storeAccountId) {
+        Store newStore = new Store();
+        newStore.setCNPJ(storeDTO.getCnpj());
+        newStore.setName(storeDTO.getName());
+        newStore.setKeycloakId(storeAccountId);
+        newStore.setEmail(storeDTO.getEmail());
+        newStore.setUrlPhoto(storeDTO.getUrlPhoto());
+
+        return storeRepository.save(newStore);
     }
 
     private Branch convertToBranch(StoreDTO storeDTO) {

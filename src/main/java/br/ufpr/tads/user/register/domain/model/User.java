@@ -16,10 +16,10 @@ public abstract class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "KEYCLOAK_ID", unique = true, nullable = false)
+    @Column(name = "KEYCLOAK_ID", unique = true)
     private UUID keycloakId;
 
-    @Column(name = "EMAIL", unique = true, nullable = false)
+    @Column(name = "EMAIL", unique = true)
     private String email;
 
     @Column(name = "URL_PHOTO")
