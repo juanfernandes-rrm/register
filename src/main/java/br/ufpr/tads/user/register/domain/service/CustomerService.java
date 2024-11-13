@@ -26,9 +26,6 @@ public class CustomerService {
     @Autowired
     private SocialService socialService;
 
-    @Autowired
-    private UserRepository userRepository;
-
     //TODO: Add transaction implementation (create profile and register user)
     public CustomerResponseDTO registerCustomer(CustomerRequestDTO customerRequestDTO) {
         UUID userKeycloakId = UUID.fromString(keycloakUserService.registerUser(customerRequestDTO));
