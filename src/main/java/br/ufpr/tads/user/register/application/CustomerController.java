@@ -1,26 +1,27 @@
 package br.ufpr.tads.user.register.application;
 
 import br.ufpr.tads.user.register.domain.request.CustomerRequestDTO;
-import br.ufpr.tads.user.register.domain.response.CustomerResponseDTO;
 import br.ufpr.tads.user.register.domain.service.CustomerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
 @RestController
 @RequestMapping("/account/user")
-public class UserController {
+public class CustomerController {
 
     @Autowired
     private CustomerService customerService;
 
     @PostMapping
-    public ResponseEntity<?> registerUser(@RequestBody CustomerRequestDTO customerRequestDTO) {
+    public ResponseEntity<?> registerCustomer(@RequestBody CustomerRequestDTO customerRequestDTO) {
         try {
             log.info("Registering user {}", customerRequestDTO);
             return ResponseEntity.ok(customerService.registerCustomer(customerRequestDTO));
@@ -31,8 +32,13 @@ public class UserController {
     }
 
     @GetMapping("/{keycloakId}")
-    public CustomerResponseDTO getUser(@PathVariable String keycloakId) {
-        return customerService.getCustomerByKeycloakId(UUID.fromString(keycloakId));
+    public ResponseEntity<?> getCustomer(@PathVariable String keycloakId) {
+        return ResponseEntity.ok(customerService.getCustomerByKeycloakId(UUID.fromString(keycloakId)));
+    }
+
+    @PostMapping("/details")
+    public ResponseEntity<?> listCustomers(@RequestBody List<UUID> userIds, Pageable pageable) {
+        return ResponseEntity.ok(customerService.listCustomers(userIds, pageable));
     }
 
 }

@@ -8,6 +8,7 @@ import java.util.UUID;
 
 @Builder
 @Data
+//TODO: criar um generico para User
 public class CustomerResponseDTO {
 
     private UUID id;

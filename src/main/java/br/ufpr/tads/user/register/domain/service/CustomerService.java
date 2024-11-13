@@ -6,8 +6,12 @@ import br.ufpr.tads.user.register.domain.repository.CustomerRepository;
 import br.ufpr.tads.user.register.domain.request.CustomerRequestDTO;
 import br.ufpr.tads.user.register.domain.response.CustomerResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -22,6 +26,9 @@ public class CustomerService {
     @Autowired
     private SocialService socialService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     //TODO: Add transaction implementation (create profile and register user)
     public CustomerResponseDTO registerCustomer(CustomerRequestDTO customerRequestDTO) {
         UUID userKeycloakId = UUID.fromString(keycloakUserService.registerUser(customerRequestDTO));
@@ -33,22 +40,27 @@ public class CustomerService {
         return mapToDTO(savedCustomer);
     }
 
-
-    public CustomerResponseDTO getCustomerById(UUID id) {
-        return mapToDTO(customerRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found")));
-    }
-
     public CustomerResponseDTO getCustomerByKeycloakId(UUID keycloakId) {
         return mapToDTO(customerRepository.findByKeycloakId(keycloakId).orElseThrow(() -> new RuntimeException("User not found")));
     }
 
+    public SliceImpl<CustomerResponseDTO> listCustomers(List<UUID> userIds, Pageable pageable) {
+        Page<Customer> customerProfilesPage = customerRepository.findAllByKeycloakIdIn(userIds, pageable);
+
+        List<CustomerResponseDTO> customerProfileDTOs = customerProfilesPage.stream()
+                .map(this::mapToDTO)
+                .toList();
+
+        return new SliceImpl<>(customerProfileDTOs, pageable, customerProfilesPage.hasNext());
+    }
+
     private Customer mapToEntity(CustomerRequestDTO customerRequestDTO, UUID userKeycloakId) {
-        return Customer.builder()
-                .keycloakId(userKeycloakId)
-                .firstName(customerRequestDTO.getFirstName())
-                .lastName(customerRequestDTO.getLastName())
-                .email(customerRequestDTO.getEmail())
-                .build();
+        Customer customer = new Customer();
+        customer.setKeycloakId(userKeycloakId);
+        customer.setFirstName(customerRequestDTO.getFirstName());
+        customer.setLastName(customerRequestDTO.getLastName());
+        customer.setEmail(customerRequestDTO.getEmail());
+        return customer;
     }
 
     private CustomerResponseDTO mapToDTO(Customer customer) {
