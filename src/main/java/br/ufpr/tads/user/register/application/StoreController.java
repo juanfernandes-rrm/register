@@ -1,6 +1,7 @@
 package br.ufpr.tads.user.register.application;
 
 import br.ufpr.tads.user.register.domain.request.StoreAccountRequestDTO;
+import br.ufpr.tads.user.register.domain.service.BranchService;
 import br.ufpr.tads.user.register.domain.service.StoreService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +19,22 @@ public class StoreController {
     @Autowired
     private StoreService storeService;
 
+    @Autowired
+    private BranchService branchService;
+
     @GetMapping("/branch/{correlationId}")
     public ResponseEntity<?> getStore(@PathVariable UUID correlationId){
         try {
             return ResponseEntity.ok(storeService.getStoreBranch(correlationId));
+        }catch (Exception e) {
+            return ResponseEntity.status(500).body("Erro interno: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/branch/nearby-from/{cep}")
+    public ResponseEntity<?> getNearbyBranches(@PathVariable String cep, @RequestParam("distance") double distance){
+        try {
+            return ResponseEntity.ok(branchService.getNearbyBranch(cep, distance));
         }catch (Exception e) {
             return ResponseEntity.status(500).body("Erro interno: " + e.getMessage());
         }
