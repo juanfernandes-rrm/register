@@ -3,11 +3,16 @@ package br.ufpr.tads.user.register.domain.client;
 import br.ufpr.tads.user.register.domain.model.Address;
 import br.ufpr.tads.user.register.domain.response.CoordinatesDTO;
 import br.ufpr.tads.user.register.domain.response.NominatimResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Slf4j
 @Component
 public class NominatimClient {
 
@@ -16,8 +21,17 @@ public class NominatimClient {
     @Autowired
     private RestTemplate restTemplate;
 
+    //TODO: Isso deveria ser um cache distribuído
+    private final Map<String, CoordinatesDTO> coordinatesCache = new ConcurrentHashMap<>();
+
     public CoordinatesDTO getCoordinatesFromAddress(Address address) {
-        String addressQuery = address.getStreet() + ",+" + address.getCity() + ",+" + address.getState() + ",+Brazil";
+        String addressKey = address.getStreet() + "," + address.getCity() + "," + address.getState();
+
+        if (coordinatesCache.containsKey(addressKey)) {
+            return coordinatesCache.get(addressKey);
+        }
+
+        String addressQuery = addressKey + ",+Brazil";
         String url = NOMINATIM_URL + "?q=" + addressQuery + "&format=json&limit=1";
 
         HttpHeaders headers = new HttpHeaders();
@@ -29,11 +43,17 @@ public class NominatimClient {
             ResponseEntity<NominatimResponse[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, NominatimResponse[].class);
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 NominatimResponse[] body = response.getBody();
-                return new CoordinatesDTO(body[0].getLat(), body[0].getLon());
+                CoordinatesDTO coordinates = new CoordinatesDTO(body[0].getLat(), body[0].getLon());
+
+                coordinatesCache.put(addressKey, coordinates);
+
+                return coordinates;
             } else {
+                log.error("Resposta vazia ou inválida da API Nominatim.");
                 throw new RuntimeException("Resposta vazia ou inválida da API Nominatim.");
             }
         } catch (Exception e) {
+            log.error("Erro ao chamar a API Nominatim:", e);
             throw new RuntimeException("Erro ao chamar a API Nominatim: " + e.getMessage(), e);
         }
     }

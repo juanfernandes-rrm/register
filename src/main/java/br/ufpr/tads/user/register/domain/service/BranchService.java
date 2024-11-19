@@ -5,6 +5,7 @@ import br.ufpr.tads.user.register.domain.model.Address;
 import br.ufpr.tads.user.register.domain.model.Branch;
 import br.ufpr.tads.user.register.domain.repository.BranchRepository;
 import br.ufpr.tads.user.register.domain.response.BranchDTO;
+import br.ufpr.tads.user.register.domain.response.CoordinatesDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,22 +28,23 @@ public class BranchService {
         Address userAddress = addressService.getAddressByCep(cep);
 
         List<Branch> allBranches = branchRepository.findAll();
-
         List<BranchDTO> nearbyBranches = new ArrayList<>();
+
         for (Branch branch : allBranches) {
-            Address branchAddress = branch.getAddress();
-
-            double distance = addressService.calculateDistanceBetweenAddresses(userAddress, branchAddress);
-
-            if (distance <= maxDistanceKm) {
-                BranchDTO branchDTO = BranchMapper.convertToDTO(branch, distance);
-                nearbyBranches.add(branchDTO);
+            try {
+                double distance = addressService.calculateDistanceBetweenAddresses(userAddress, branch.getAddress());
+                if (distance <= maxDistanceKm) {
+                    nearbyBranches.add(BranchMapper.convertToDTO(branch, distance));
+                }
+            } catch (RuntimeException e) {
+                log.warn("Falha ao calcular distância para filial '{}': {}", branch.getId(), e.getMessage());
             }
         }
 
         nearbyBranches.sort(Comparator.comparingDouble(BranchDTO::getDistance));
         return nearbyBranches;
     }
+
 }
 
 

@@ -12,20 +12,23 @@ import org.springframework.stereotype.Service;
 public class AddressService {
 
     @Autowired
-    private ViaCepClient viaCepClient;
+    private  ViaCepClient viaCepClient;
 
     @Autowired
-    private NominatimClient nominatimClient;
+    private CoordinatesService coordinatesService;
 
     public Address getAddressByCep(String cep) {
         return viaCepClient.getAddressFromCep(cep);
     }
 
     public double calculateDistanceBetweenAddresses(Address address1, Address address2) {
-        CoordinatesDTO userCoordinatesDTO = nominatimClient.getCoordinatesFromAddress(address1);
-        CoordinatesDTO branchCoordinatesDTO = nominatimClient.getCoordinatesFromAddress(address2);
-        return DistanceCalculator.calculateDistance(userCoordinatesDTO.getLat(), userCoordinatesDTO.getLon(),
-                branchCoordinatesDTO.getLat(), branchCoordinatesDTO.getLon());
+        CoordinatesDTO coordinates1 = coordinatesService.getCoordinates(address1);
+        CoordinatesDTO coordinates2 = coordinatesService.getCoordinates(address2);
+        return DistanceCalculator.calculateDistance(
+                coordinates1.getLat(), coordinates1.getLon(),
+                coordinates2.getLat(), coordinates2.getLon()
+        );
     }
 
 }
+
