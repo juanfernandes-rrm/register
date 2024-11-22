@@ -10,4 +10,6 @@ import java.util.UUID;
 @Repository
 public interface StoreRepository extends JpaRepository<Store, UUID> {
     Optional<Store> findByCNPJ(String cnpj);
+
+    Optional<Store> findByKeycloakId(UUID keycloakId);
 }

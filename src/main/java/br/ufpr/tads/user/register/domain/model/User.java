@@ -10,14 +10,19 @@ import java.util.UUID;
 @Table(name = "USER_APP")
 @Inheritance(strategy = InheritanceType.JOINED)
 public abstract class User {
+
     @Id
+    @Column(name = "ID")
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(unique = true)
+    @Column(name = "KEYCLOAK_ID", unique = true)
+    private UUID keycloakId;
+
+    @Column(name = "EMAIL", unique = true)
     private String email;
 
-    @Column()
-    private String password;
+    @Column(name = "URL_PHOTO")
+    private String urlPhoto;
 
 }

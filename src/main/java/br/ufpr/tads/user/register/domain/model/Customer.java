@@ -1,19 +1,26 @@
 package br.ufpr.tads.user.register.domain.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
 
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
-@Table(name = "COSTUMER")
+@Table(name = "CUSTOMER")
 public class Customer extends User {
 
-    @Column(nullable = false)
+    @Column(name = "USERNAME", nullable = false)
     private String firstName;
 
-    @Column(nullable = false)
+    @Column(name = "LAST_NAME", nullable = false)
     private String lastName;
 
 }
