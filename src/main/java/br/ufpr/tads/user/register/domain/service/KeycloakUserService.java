@@ -7,6 +7,7 @@ import br.ufpr.tads.user.register.domain.request.UserRegistrationRequestDTO;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
@@ -38,6 +39,29 @@ public class KeycloakUserService {
         } else {
             throw new UserCreationException("Invalid type of user.");
         }
+    }
+
+    public UserRepresentation getUserById(String userId) {
+        return  getUsersResource().get(userId).toRepresentation();
+    }
+
+    public void deleteUserById(String userId) {
+        getUsersResource().delete(userId);
+    }
+
+    public void updateUser(String userId, UserRepresentation updatedUser) {
+        try {
+            UserResource userResource = getUsersResource().get(userId);
+            userResource.update(updatedUser);
+            log.info("User with ID {} successfully updated.", userId);
+        } catch (Exception e) {
+            log.error("Failed to update user with ID {}: {}", userId, e.getMessage());
+            throw new RuntimeException("Failed to update user: " + e.getMessage(), e);
+        }
+    }
+
+    public String getServiceAccountToken() {
+        return keycloak.tokenManager().getAccessTokenString();
     }
 
     private UUID registerCustomer(CustomerAccountRequestDTO userDTO) {
@@ -73,20 +97,8 @@ public class KeycloakUserService {
         return UUID.fromString(accountId);
     }
 
-    public UserRepresentation getUserById(String userId) {
-        return  getUsersResource().get(userId).toRepresentation();
-    }
-
     private UsersResource getUsersResource() {
         return keycloak.realm(realm).users();
-    }
-
-    public void deleteUserById(String userId) {
-        getUsersResource().delete(userId);
-    }
-
-    public String getServiceAccountToken() {
-        return keycloak.tokenManager().getAccessTokenString();
     }
 
     private CredentialRepresentation createPasswordCredentials(String password) {

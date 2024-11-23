@@ -18,6 +18,7 @@ import java.util.UUID;
 public class SocialService {
 
     private static String CREATE_PROFILE = "/profile";
+    private static String DELETE_PROFILE = "/admin/profile/delete/%s";
 
     @Autowired
     private RestTemplate restTemplate;
@@ -50,6 +51,31 @@ public class SocialService {
             log.error("User not created in social service");
         }
         return isUserCreatedInSocial;
+    }
+
+    public void deleteProfile(UUID keycloakId, String serviceAccountToken) {
+        if(keycloakId == null || serviceAccountToken == null){
+            log.error("KeycloakId or token is null");
+            return;
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(serviceAccountToken);
+        HttpEntity<UUID> entity = new HttpEntity<>(keycloakId, headers);
+
+        ResponseEntity<Void> response = restTemplate.exchange(
+                socialServiceUrl + String.format(DELETE_PROFILE,keycloakId),
+                HttpMethod.DELETE,
+                entity,
+                Void.class
+        );
+
+        boolean isUserDeletedInSocial = response.getStatusCode().is2xxSuccessful();
+        if(isUserDeletedInSocial){
+            log.info("User deleted in social service");
+        } else {
+            log.error("User not deleted in social service");
+        }
     }
 
 }
