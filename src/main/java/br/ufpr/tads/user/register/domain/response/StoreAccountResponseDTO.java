@@ -10,6 +10,7 @@ public class StoreAccountResponseDTO {
 
     private UUID id;
     private UUID keycloakId;
+    private Boolean approved;
     private String name;
     private String email;
     private String cnpj;
@@ -19,6 +20,7 @@ public class StoreAccountResponseDTO {
         StoreAccountResponseDTO storeAccountResponseDTO = new StoreAccountResponseDTO();
         storeAccountResponseDTO.setId(store.getId());
         storeAccountResponseDTO.setKeycloakId(store.getKeycloakId());
+        storeAccountResponseDTO.setApproved(store.getApproved());
         storeAccountResponseDTO.setName(store.getName());
         storeAccountResponseDTO.setEmail(store.getEmail());
         storeAccountResponseDTO.setCnpj(store.getCNPJ());

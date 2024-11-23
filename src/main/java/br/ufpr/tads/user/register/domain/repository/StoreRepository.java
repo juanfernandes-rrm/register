@@ -1,6 +1,8 @@
 package br.ufpr.tads.user.register.domain.repository;
 
 import br.ufpr.tads.user.register.domain.model.Store;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,4 +14,8 @@ public interface StoreRepository extends JpaRepository<Store, UUID> {
     Optional<Store> findByCNPJ(String cnpj);
 
     Optional<Store> findByKeycloakId(UUID keycloakId);
+
+    Slice<Store> findByNameContainingIgnoreCase(String firstname, Pageable pageable);
+
+    Slice<Store> findByApprovedNullAndKeycloakIdNotNull(Pageable pageable);
 }

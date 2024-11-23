@@ -6,13 +6,18 @@ import br.ufpr.tads.user.register.domain.model.Store;
 import br.ufpr.tads.user.register.domain.repository.BranchRepository;
 import br.ufpr.tads.user.register.domain.repository.StoreRepository;
 import br.ufpr.tads.user.register.domain.request.StoreAccountRequestDTO;
+import br.ufpr.tads.user.register.domain.request.UpdateStoreAccountRequestDTO;
 import br.ufpr.tads.user.register.domain.response.AddressDTO;
 import br.ufpr.tads.user.register.domain.response.BranchDTO;
 import br.ufpr.tads.user.register.domain.response.StoreAccountResponseDTO;
 import br.ufpr.tads.user.register.domain.response.StoreDTO;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -81,6 +86,89 @@ public class StoreService {
         Store store = storeRepository.findByKeycloakId(keycloakId)
                 .orElseThrow(() -> new RuntimeException("Store not found with Keycloak ID: " + keycloakId));
         return StoreAccountResponseDTO.mapToDTO(store);
+    }
+
+    public long getTotalRegisteredStore() {
+        return storeRepository.count();
+    }
+
+    public SliceImpl<StoreAccountResponseDTO> listStores(Pageable pageable) {
+        Slice<Store> storeSlice = storeRepository.findAll(pageable);
+
+        if (storeSlice.hasContent()) {
+            List<StoreAccountResponseDTO> storeAccountResponseDTOs = storeSlice.stream()
+                    .map(StoreAccountResponseDTO::mapToDTO)
+                    .toList();
+
+            return new SliceImpl<>(storeAccountResponseDTOs, storeSlice.getPageable(), storeSlice.hasNext());
+        }
+
+        return new SliceImpl<>(List.of(), pageable, false);
+    }
+
+    public SliceImpl<StoreAccountResponseDTO> searchByName(String firstname, Pageable pageable) {
+        Slice<Store> storeSlice = storeRepository.findByNameContainingIgnoreCase(firstname, pageable);
+
+        if (storeSlice.hasContent()) {
+            List<StoreAccountResponseDTO> storeAccountResponseDTOs = storeSlice.stream()
+                    .map(StoreAccountResponseDTO::mapToDTO)
+                    .toList();
+
+            return new SliceImpl<>(storeAccountResponseDTOs, storeSlice.getPageable(), storeSlice.hasNext());
+        }
+
+        return new SliceImpl<>(List.of(), pageable, false);
+    }
+
+    public SliceImpl<StoreAccountResponseDTO> listStoresPendingApproval(Pageable pageable) {
+        Slice<Store> storeSlice = storeRepository.findByApprovedNullAndKeycloakIdNotNull(pageable);
+
+        if (storeSlice.hasContent()) {
+            List<StoreAccountResponseDTO> storeAccountResponseDTOs = storeSlice.stream()
+                    .map(StoreAccountResponseDTO::mapToDTO)
+                    .toList();
+
+            return new SliceImpl<>(storeAccountResponseDTOs, storeSlice.getPageable(), storeSlice.hasNext());
+        }
+
+        return new SliceImpl<>(List.of(), pageable, false);
+    }
+
+    public void approveStore(UUID keycloakId) {
+        Store store = storeRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new RuntimeException("Store not found with keycloakId: " + keycloakId));
+
+        store.setApproved(true);
+        storeRepository.save(store);
+    }
+
+    public void rejectStore(UUID keycloakId) {
+        Store store = storeRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new RuntimeException("Store not found with keycloakId: " + keycloakId));
+
+        store.setApproved(false);
+        storeRepository.save(store);
+    }
+
+    public StoreAccountResponseDTO updateStore(UUID keycloakId, UpdateStoreAccountRequestDTO storeAccountRequestDTO) {
+        Store store = storeRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new RuntimeException("Store not found with keycloakId: " + keycloakId));
+
+        store.setName(storeAccountRequestDTO.getName());
+        store.setEmail(storeAccountRequestDTO.getEmail());
+        store.setUrlPhoto(storeAccountRequestDTO.getUrlPhoto());
+        StoreAccountResponseDTO updatedStoreAccountResponseDTO = StoreAccountResponseDTO.mapToDTO(storeRepository.save(store));
+
+        try {
+            UserRepresentation userRepresentation = keycloakUserService.getUserById(keycloakId.toString());
+            userRepresentation.setFirstName(storeAccountRequestDTO.getName());
+            userRepresentation.setEmail(store.getEmail());
+            keycloakUserService.updateUser(keycloakId.toString(), userRepresentation);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update user in Keycloak: " + e.getMessage(), e);
+        }
+
+        return updatedStoreAccountResponseDTO;
     }
 
     private Branch addNewBranchToExistingStore(Store store, StoreDTO storeDTO) {
@@ -157,7 +245,4 @@ public class StoreService {
         return branchDTO;
     }
 
-    public long getTotalRegisteredStore() {
-        return storeRepository.count();
-    }
 }

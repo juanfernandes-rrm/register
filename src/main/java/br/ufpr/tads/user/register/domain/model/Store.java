@@ -18,6 +18,9 @@ public class Store extends User {
     @Column(nullable = false, unique = true)
     private String CNPJ;
 
+    @Column
+    private Boolean approved;
+
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @ToString.Exclude
     private List<Branch> branches = new ArrayList<>();
