@@ -157,4 +157,7 @@ public class StoreService {
         return branchDTO;
     }
 
+    public long getTotalRegisteredStore() {
+        return storeRepository.count();
+    }
 }

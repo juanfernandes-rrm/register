@@ -73,4 +73,7 @@ public class CustomerService {
         return null;
     }
 
+    public long getTotalRegisteredCustomers() {
+        return customerRepository.count();
+    }
 }
