@@ -6,15 +6,15 @@ keycloak:
   realm: nota-social
   resource: register
   credentials:
-    secret: iweNvYX3hUvcD0kSTLj6XZwbAnJ5U430
+    secret: 2bbLczI6Vv08laKi0zCYzFGo3GtVg0EL
   public-client: false
 
 spring:
   rabbitmq:
     host: localhost
     port: 5672
-    username: guest
-    password: guest
+    username: user
+    password: password
   datasource:
 #    url: jdbc:mysql://localhost:3306/user_db?createIfNotExists=true
 #    username: myapp_user

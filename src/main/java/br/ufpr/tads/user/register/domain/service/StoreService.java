@@ -84,7 +84,13 @@ public class StoreService {
 
     public BranchDTO getStoreBranch(UUID correlationId) {
         Optional<Branch> branchOptional = branchRepository.findByCorrelationId(correlationId);
-        return branchOptional.map(this::mapBranchToDTO).orElse(null);
+
+        if (branchOptional.isPresent()) {
+            return branchOptional.map(this::mapBranchToDTO).get();
+        }
+
+        log.info("Branch with correlationId {} not found", correlationId);
+        throw new RuntimeException("Branch not found with correlationId: " + correlationId);
     }
 
     public StoreAccountResponseDTO getStoreAccountInfo(UUID storeId) {
