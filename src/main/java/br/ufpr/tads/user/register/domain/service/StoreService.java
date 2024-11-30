@@ -70,7 +70,7 @@ public class StoreService {
     public Branch createOrUpdateStore(StoreDTO storeDTO) {
         String cnpjRoot = extractCnpjRoot(storeDTO.getCnpj());
 
-        Optional<Store> existingStore = storeRepository.findByCnpjRoot(cnpjRoot);
+        Optional<Store> existingStore = storeRepository.findByCnpjRootWithLock(cnpjRoot);
 
         if (existingStore.isPresent()) {
             log.info("Store with CNPJ root {} already exists. Adding new branch with CNPJ {}", cnpjRoot, storeDTO.getCnpj());
