@@ -40,7 +40,7 @@ public class StoreService {
     @Autowired
     private KeycloakUserService keycloakUserService;
 
-    public StoreAccountResponseDTO registerStore(StoreAccountRequestDTO storeAccountRequestDTO) {
+    public StoreAccountResponseDTO registerStoreAccount(StoreAccountRequestDTO storeAccountRequestDTO) {
         Optional<Store> optionalStore = storeRepository.findByCnpjRoot(storeAccountRequestDTO.getCnpj());
 
         if (optionalStore.isEmpty()) {
@@ -87,9 +87,9 @@ public class StoreService {
         return branchOptional.map(this::mapBranchToDTO).orElse(null);
     }
 
-    public StoreAccountResponseDTO getStoreAccountInfo(UUID keycloakId) {
-        Store store = storeRepository.findByKeycloakId(keycloakId)
-                .orElseThrow(() -> new RuntimeException("Store not found with Keycloak ID: " + keycloakId));
+    public StoreAccountResponseDTO getStoreAccountInfo(UUID storeId) {
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new RuntimeException("Store with Id {} not found." + storeId));
         return StoreAccountResponseDTO.mapToDTO(store);
     }
 
@@ -97,7 +97,7 @@ public class StoreService {
         return storeRepository.count();
     }
 
-    public SliceImpl<StoreAccountResponseDTO> listStores(Pageable pageable) {
+    public SliceImpl<StoreAccountResponseDTO> listStoreAccounts(Pageable pageable) {
         Slice<Store> storeSlice = storeRepository.findAll(pageable);
 
         if (storeSlice.hasContent()) {
@@ -111,7 +111,7 @@ public class StoreService {
         return new SliceImpl<>(List.of(), pageable, false);
     }
 
-    public SliceImpl<StoreAccountResponseDTO> searchByName(String firstname, Pageable pageable) {
+    public SliceImpl<StoreAccountResponseDTO> searchStoreAccountByName(String firstname, Pageable pageable) {
         Slice<Store> storeSlice = storeRepository.findByNameContainingIgnoreCase(firstname, pageable);
 
         if (storeSlice.hasContent()) {
@@ -125,7 +125,7 @@ public class StoreService {
         return new SliceImpl<>(List.of(), pageable, false);
     }
 
-    public SliceImpl<StoreAccountResponseDTO> listStoresPendingApproval(Pageable pageable) {
+    public SliceImpl<StoreAccountResponseDTO> listStoreAccountsPendingApproval(Pageable pageable) {
         Slice<Store> storeSlice = storeRepository.findByApprovedNullAndKeycloakIdNotNull(pageable);
 
         if (storeSlice.hasContent()) {
@@ -139,7 +139,7 @@ public class StoreService {
         return new SliceImpl<>(List.of(), pageable, false);
     }
 
-    public void approveStore(UUID keycloakId) {
+    public void approveStoreAccount(UUID keycloakId) {
         Store store = storeRepository.findByKeycloakId(keycloakId)
                 .orElseThrow(() -> new RuntimeException("Store not found with keycloakId: " + keycloakId));
 
@@ -147,7 +147,7 @@ public class StoreService {
         storeRepository.save(store);
     }
 
-    public void rejectStore(UUID keycloakId) {
+    public void rejectStoreAccount(UUID keycloakId) {
         Store store = storeRepository.findByKeycloakId(keycloakId)
                 .orElseThrow(() -> new RuntimeException("Store not found with keycloakId: " + keycloakId));
 
@@ -155,7 +155,7 @@ public class StoreService {
         storeRepository.save(store);
     }
 
-    public StoreAccountResponseDTO updateStore(UUID keycloakId, UpdateStoreAccountRequestDTO storeAccountRequestDTO) {
+    public StoreAccountResponseDTO updateStoreAccount(UUID keycloakId, UpdateStoreAccountRequestDTO storeAccountRequestDTO) {
         Store store = storeRepository.findByKeycloakId(keycloakId)
                 .orElseThrow(() -> new RuntimeException("Store not found with keycloakId: " + keycloakId));
 
@@ -269,6 +269,5 @@ public class StoreService {
         }
         return cnpj.substring(0, 8);
     }
-
-
+    
 }

@@ -45,7 +45,7 @@ public class AdminController {
         try {
             log.info("Getting list of customers");
             Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
-            return ResponseEntity.ok(customerService.listCustomers(pageable));
+            return ResponseEntity.ok(customerService.listCustomerAccounts(pageable));
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Erro interno: " + e.getMessage());
         }
@@ -55,7 +55,7 @@ public class AdminController {
     public ResponseEntity<?> deleteCustomer(@PathVariable("keycloakId") UUID keycloakId) {
         try {
             log.info("Deleting customers {}", keycloakId);
-            customerService.deleteCustomer(keycloakId);
+            customerService.deleteAccountCustomer(keycloakId);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Erro interno: " + e.getMessage());
@@ -66,7 +66,7 @@ public class AdminController {
     public ResponseEntity<?> updateCustomer(@PathVariable("keycloakId") UUID keycloakId, @RequestBody UpdateCustomerAccountRequestDTO customerAccountRequestDTO) {
         try {
             log.info("Updating customers {}", keycloakId);
-            customerService.updateCustomer(keycloakId, customerAccountRequestDTO);
+            customerService.updateCustomerAccount(keycloakId, customerAccountRequestDTO);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Erro interno: " + e.getMessage());
@@ -80,7 +80,7 @@ public class AdminController {
         try {
             log.info("Getting list of stores");
             Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
-            return ResponseEntity.ok(storeService.listStores(pageable));
+            return ResponseEntity.ok(storeService.listStoreAccounts(pageable));
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Erro interno: " + e.getMessage());
         }
@@ -93,7 +93,7 @@ public class AdminController {
         try {
             log.info("Getting list of stores pending approval");
             Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
-            return ResponseEntity.ok(storeService.listStoresPendingApproval(pageable));
+            return ResponseEntity.ok(storeService.listStoreAccountsPendingApproval(pageable));
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Erro interno: " + e.getMessage());
         }
@@ -103,7 +103,7 @@ public class AdminController {
     public ResponseEntity<?> approveStore(@PathVariable("keycloakId") UUID keycloakId) {
         try {
             log.info("Approving store {}", keycloakId);
-            storeService.approveStore(keycloakId);
+            storeService.approveStoreAccount(keycloakId);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Erro interno: " + e.getMessage());
@@ -114,7 +114,7 @@ public class AdminController {
     public ResponseEntity<?> rejectStore(@PathVariable("keycloakId") UUID keycloakId) {
         try {
             log.info("Rejecting store {}", keycloakId);
-            storeService.rejectStore(keycloakId);
+            storeService.rejectStoreAccount(keycloakId);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Erro interno: " + e.getMessage());
@@ -125,7 +125,7 @@ public class AdminController {
     public ResponseEntity<?> updateStore(@PathVariable("keycloakId") UUID keycloakId, @RequestBody UpdateStoreAccountRequestDTO storeAccountRequestDTO) {
         try {
             log.info("Updating store {}", keycloakId);
-            return ResponseEntity.ok(storeService.updateStore(keycloakId, storeAccountRequestDTO));
+            return ResponseEntity.ok(storeService.updateStoreAccount(keycloakId, storeAccountRequestDTO));
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Erro interno: " + e.getMessage());
         }

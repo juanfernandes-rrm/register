@@ -32,7 +32,7 @@ public class CustomerService {
     private SocialService socialService;
 
     //TODO: Need to implement saga pattern to rollback if any of the operations fail
-    public CustomerAccountResponseDTO registerCustomer(CustomerAccountRequestDTO customerAccountRequestDTO) {
+    public CustomerAccountResponseDTO registerCustomerAccount(CustomerAccountRequestDTO customerAccountRequestDTO) {
         UUID userKeycloakId = keycloakUserService.registerUser(customerAccountRequestDTO);
         Customer customer = mapToEntity(customerAccountRequestDTO, userKeycloakId);
         Customer savedCustomer = customerRepository.save(customer);
@@ -42,11 +42,11 @@ public class CustomerService {
         return mapToDTO(savedCustomer);
     }
 
-    public CustomerAccountResponseDTO getCustomerByKeycloakId(UUID keycloakId) {
+    public CustomerAccountResponseDTO getCustomerAccountByKeycloakId(UUID keycloakId) {
         return mapToDTO(customerRepository.findByKeycloakId(keycloakId).orElseThrow(() -> new RuntimeException("User not found")));
     }
 
-    public SliceImpl<CustomerAccountResponseDTO> searchCustomerByName(String name, Pageable pageable) {
+    public SliceImpl<CustomerAccountResponseDTO> searchCustomerAccountByName(String name, Pageable pageable) {
         Slice<Customer> customerSlice = customerRepository.findByFirstNameContainingIgnoreCase(name, pageable);
 
         if (customerSlice.hasContent()) {
@@ -59,7 +59,7 @@ public class CustomerService {
         return new SliceImpl<>(Collections.emptyList(), customerSlice.getPageable(), false);
     }
 
-    public SliceImpl<CustomerAccountResponseDTO> listCustomers(Pageable pageable) {
+    public SliceImpl<CustomerAccountResponseDTO> listCustomerAccounts(Pageable pageable) {
         Page<Customer> customerProfilesPage = customerRepository.findAll(pageable);
 
         List<CustomerAccountResponseDTO> customerProfileDTOs = customerProfilesPage.stream()
@@ -69,7 +69,7 @@ public class CustomerService {
         return new SliceImpl<>(customerProfileDTOs, customerProfilesPage.getPageable(), customerProfilesPage.hasNext());
     }
 
-    public SliceImpl<CustomerAccountResponseDTO> listCustomers(List<UUID> userIds, Pageable pageable) {
+    public SliceImpl<CustomerAccountResponseDTO> listCustomerAccounts(List<UUID> userIds, Pageable pageable) {
         Page<Customer> customerProfilesPage = customerRepository.findAllByKeycloakIdIn(userIds, pageable);
 
         List<CustomerAccountResponseDTO> customerProfileDTOs = customerProfilesPage.stream()
@@ -85,7 +85,7 @@ public class CustomerService {
 
     @Transactional
     //TODO: Need to implement saga pattern to rollback if any of the operations fail
-    public void deleteCustomer(UUID keycloakId) {
+    public void deleteAccountCustomer(UUID keycloakId) {
         keycloakUserService.deleteUserById(keycloakId.toString());
         customerRepository.findByKeycloakId(keycloakId).ifPresentOrElse(customerRepository::delete, () -> {
             throw new RuntimeException("User not found");
@@ -94,7 +94,7 @@ public class CustomerService {
     }
 
     //TODO: Need to implement saga pattern to rollback if any of the operations fail
-    public CustomerAccountResponseDTO updateCustomer(UUID keycloakId, UpdateCustomerAccountRequestDTO customerAccountRequestDTO) {
+    public CustomerAccountResponseDTO updateCustomerAccount(UUID keycloakId, UpdateCustomerAccountRequestDTO customerAccountRequestDTO) {
         Customer customer = customerRepository.findByKeycloakId(keycloakId).orElseThrow(() -> new RuntimeException("User not found"));
 
         customer.setFirstName(customerAccountRequestDTO.getFirstName());

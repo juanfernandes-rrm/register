@@ -17,7 +17,7 @@ import java.util.UUID;
 @Slf4j
 @RestController
 @RequestMapping("/account/user")
-public class CustomerController {
+public class CustomerAccountController {
 
     @Autowired
     private CustomerService customerService;
@@ -26,7 +26,7 @@ public class CustomerController {
     public ResponseEntity<?> registerCustomer(@RequestBody CustomerAccountRequestDTO customerAccountRequestDTO) {
         try {
             log.info("Registering user {}", customerAccountRequestDTO);
-            return ResponseEntity.ok(customerService.registerCustomer(customerAccountRequestDTO));
+            return ResponseEntity.ok(customerService.registerCustomerAccount(customerAccountRequestDTO));
         } catch (Exception e) {
             log.info("User registration failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -35,7 +35,7 @@ public class CustomerController {
 
     @GetMapping("/{keycloakId}")
     public ResponseEntity<?> getCustomer(@PathVariable String keycloakId) {
-        return ResponseEntity.ok(customerService.getCustomerByKeycloakId(UUID.fromString(keycloakId)));
+        return ResponseEntity.ok(customerService.getCustomerAccountByKeycloakId(UUID.fromString(keycloakId)));
     }
 
     @GetMapping("/search")
@@ -46,7 +46,7 @@ public class CustomerController {
         try {
             log.info("Searching customer by firstname: {}", firstname);
             Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
-            return ResponseEntity.ok(customerService.searchCustomerByName(firstname, pageable));
+            return ResponseEntity.ok(customerService.searchCustomerAccountByName(firstname, pageable));
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Erro interno: " + e.getMessage());
         }
@@ -54,7 +54,7 @@ public class CustomerController {
 
     @PostMapping("/details")
     public ResponseEntity<?> listCustomers(@RequestBody List<UUID> userIds, Pageable pageable) {
-        return ResponseEntity.ok(customerService.listCustomers(userIds, pageable));
+        return ResponseEntity.ok(customerService.listCustomerAccounts(userIds, pageable));
     }
 
 }
