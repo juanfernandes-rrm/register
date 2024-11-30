@@ -7,6 +7,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+//Trocar para BranchDTO -> essa é a loja retornada pelo receiptscan
 public class StoreDTO {
     private UUID id;
     private String name;

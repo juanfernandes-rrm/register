@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -29,6 +30,7 @@ public class AdminController {
     @Autowired
     private StoreService storeService;
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/total-registered-users")
     public ResponseEntity<?> getTotalRegisteredUsers() {
         try {
@@ -38,6 +40,7 @@ public class AdminController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/customer")
     public ResponseEntity<?> listCustomers(@RequestParam("page") int page, @RequestParam("size") int size,
                                            @RequestParam("sortDirection") Sort.Direction sortDirection,
@@ -51,6 +54,7 @@ public class AdminController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping("/customer/{keycloakId}")
     public ResponseEntity<?> deleteCustomer(@PathVariable("keycloakId") UUID keycloakId) {
         try {
@@ -62,6 +66,7 @@ public class AdminController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/customer/{keycloakId}")
     public ResponseEntity<?> updateCustomer(@PathVariable("keycloakId") UUID keycloakId, @RequestBody UpdateCustomerAccountRequestDTO customerAccountRequestDTO) {
         try {
@@ -73,6 +78,7 @@ public class AdminController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/store")
     public ResponseEntity<?> listStores(@RequestParam("page") int page, @RequestParam("size") int size,
                                         @RequestParam("sortDirection") Sort.Direction sortDirection,
@@ -86,6 +92,7 @@ public class AdminController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/store/pending-approval")
     public ResponseEntity<?> listStoresPendingApproval(@RequestParam("page") int page, @RequestParam("size") int size,
                                                        @RequestParam("sortDirection") Sort.Direction sortDirection,
@@ -99,6 +106,7 @@ public class AdminController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PatchMapping("/store/{keycloakId}/approve")
     public ResponseEntity<?> approveStore(@PathVariable("keycloakId") UUID keycloakId) {
         try {
@@ -110,6 +118,7 @@ public class AdminController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PatchMapping("/store/{keycloakId}/reject")
     public ResponseEntity<?> rejectStore(@PathVariable("keycloakId") UUID keycloakId) {
         try {
@@ -121,6 +130,7 @@ public class AdminController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/store/{keycloakId}")
     public ResponseEntity<?> updateStore(@PathVariable("keycloakId") UUID keycloakId, @RequestBody UpdateStoreAccountRequestDTO storeAccountRequestDTO) {
         try {

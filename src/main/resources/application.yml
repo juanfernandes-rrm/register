@@ -10,16 +10,17 @@ keycloak:
   public-client: false
 
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/nota-social
   rabbitmq:
     host: localhost
     port: 5672
     username: user
     password: password
   datasource:
-#    url: jdbc:mysql://localhost:3306/user_db?createIfNotExists=true
-#    username: myapp_user
-#    password: myapp_password
-    #    To use local
     url: jdbc:mysql://localhost:3306/register_db?createIfNotExists=true
     username: root
     password: rootpassword
