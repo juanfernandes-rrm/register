@@ -135,11 +135,13 @@ public class AdminController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN')")
-    @PutMapping("/store/{keycloakId}")
-    public ResponseEntity<?> updateStore(@PathVariable("keycloakId") UUID keycloakId, @RequestBody UpdateStoreAccountRequestDTO storeAccountRequestDTO) {
+    @PatchMapping(path = "/store/{keycloakId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateStore(@PathVariable("keycloakId") UUID keycloakId,
+                                         @RequestPart UpdateStoreAccountRequestDTO storeAccountRequestDTO,
+                                         @RequestPart(value = "image", required = false) MultipartFile image) {
         try {
             log.info("Updating store {}", keycloakId);
-            return ResponseEntity.ok(storeService.updateStoreAccount(keycloakId, storeAccountRequestDTO));
+            return ResponseEntity.ok(storeService.updateStoreAccount(keycloakId, storeAccountRequestDTO, image));
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Erro interno: " + e.getMessage());
         }

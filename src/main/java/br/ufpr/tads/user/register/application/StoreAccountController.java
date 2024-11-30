@@ -8,8 +8,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -57,11 +59,12 @@ public class StoreAccountController {
         }
     }
 
-    @PostMapping
-    public ResponseEntity<?> registerStore(@RequestBody StoreAccountRequestDTO storeAccountRequestDTO) {
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> registerStore(@RequestPart StoreAccountRequestDTO storeAccountRequestDTO,
+                                           @RequestPart(value = "image", required = false) MultipartFile image) {
         try {
             log.info("Registering store {}", storeAccountRequestDTO);
-            return ResponseEntity.ok(storeService.registerStoreAccount(storeAccountRequestDTO));
+            return ResponseEntity.ok(storeService.registerStoreAccount(storeAccountRequestDTO, image));
         } catch (Exception e) {
             log.info("User registration failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());

@@ -14,5 +14,4 @@ public class UserRegistrationRequestDTO {
     @NotBlank(message = "password is required")
     private String password;
 
-    private String urlPhoto;
 }

@@ -19,10 +19,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import static java.util.Objects.nonNull;
 
 @Slf4j
 @Service
@@ -38,14 +41,19 @@ public class StoreService {
     private BranchService branchService;
 
     @Autowired
+    private ImageService imageService;
+
+    @Autowired
     private KeycloakUserService keycloakUserService;
 
-    public StoreAccountResponseDTO registerStoreAccount(StoreAccountRequestDTO storeAccountRequestDTO) {
+    public StoreAccountResponseDTO registerStoreAccount(StoreAccountRequestDTO storeAccountRequestDTO, MultipartFile image) {
         Optional<Store> optionalStore = storeRepository.findByCnpjRoot(storeAccountRequestDTO.getCnpj());
+
+        String urlPhoto = nonNull(image) ? imageService.uploadImage(image) : null;
 
         if (optionalStore.isEmpty()) {
             UUID storeAccountId = keycloakUserService.registerUser(storeAccountRequestDTO);
-            Store newStoreWithoutBranch = createNewStoreWithoutBranch(storeAccountRequestDTO, storeAccountId);
+            Store newStoreWithoutBranch = createNewStoreWithoutBranch(storeAccountRequestDTO, storeAccountId, urlPhoto);
             return StoreAccountResponseDTO.mapToDTO(newStoreWithoutBranch);
         }
 
@@ -57,7 +65,7 @@ public class StoreService {
 
             store.setKeycloakId(storeAccountId);
             store.setEmail(storeAccountRequestDTO.getEmail());
-            store.setUrlPhoto(storeAccountRequestDTO.getUrlPhoto());
+            store.setUrlPhoto(urlPhoto);
             storeRepository.save(store);
 
             return StoreAccountResponseDTO.mapToDTO(store);
@@ -161,13 +169,13 @@ public class StoreService {
         storeRepository.save(store);
     }
 
-    public StoreAccountResponseDTO updateStoreAccount(UUID keycloakId, UpdateStoreAccountRequestDTO storeAccountRequestDTO) {
+    public StoreAccountResponseDTO updateStoreAccount(UUID keycloakId, UpdateStoreAccountRequestDTO storeAccountRequestDTO, MultipartFile image) {
         Store store = storeRepository.findByKeycloakId(keycloakId)
                 .orElseThrow(() -> new RuntimeException("Store not found with keycloakId: " + keycloakId));
 
         store.setName(storeAccountRequestDTO.getName());
         store.setEmail(storeAccountRequestDTO.getEmail());
-        store.setUrlPhoto(storeAccountRequestDTO.getUrlPhoto());
+        store.setUrlPhoto(nonNull(image) ? imageService.uploadImage(image) : store.getUrlPhoto());
         StoreAccountResponseDTO updatedStoreAccountResponseDTO = StoreAccountResponseDTO.mapToDTO(storeRepository.save(store));
 
         try {
@@ -175,6 +183,11 @@ public class StoreService {
             userRepresentation.setFirstName(storeAccountRequestDTO.getName());
             userRepresentation.setEmail(store.getEmail());
             keycloakUserService.updateUser(keycloakId.toString(), userRepresentation);
+
+            if (nonNull(storeAccountRequestDTO.getPassword())) {
+                keycloakUserService.updateUserPassword(keycloakId, storeAccountRequestDTO.getPassword());
+            }
+
         } catch (Exception e) {
             throw new RuntimeException("Failed to update user in Keycloak: " + e.getMessage(), e);
         }
@@ -217,13 +230,13 @@ public class StoreService {
         return newBranch;
     }
 
-    private Store createNewStoreWithoutBranch(StoreAccountRequestDTO storeDTO, UUID storeAccountId) {
+    private Store createNewStoreWithoutBranch(StoreAccountRequestDTO storeDTO, UUID storeAccountId, String urlPhoto) {
         Store newStore = new Store();
         newStore.setCnpjRoot(extractCnpjRoot(storeDTO.getCnpj()));
         newStore.setName(storeDTO.getName());
         newStore.setKeycloakId(storeAccountId);
         newStore.setEmail(storeDTO.getEmail());
-        newStore.setUrlPhoto(storeDTO.getUrlPhoto());
+        newStore.setUrlPhoto(urlPhoto);
 
         return storeRepository.save(newStore);
     }
