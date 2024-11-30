@@ -45,3 +45,7 @@ broker:
 social:
   service:
     url: http://localhost:8085
+
+imgur:
+  upload-url: https://api.imgur.com/3/image
+  client-id: 067de737e030833

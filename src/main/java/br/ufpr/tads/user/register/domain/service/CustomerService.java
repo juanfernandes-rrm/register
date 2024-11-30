@@ -1,6 +1,7 @@
 package br.ufpr.tads.user.register.domain.service;
 
 
+import br.ufpr.tads.user.register.domain.client.ImgurClient;
 import br.ufpr.tads.user.register.domain.model.Customer;
 import br.ufpr.tads.user.register.domain.repository.CustomerRepository;
 import br.ufpr.tads.user.register.domain.request.CustomerAccountRequestDTO;
@@ -14,10 +15,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+
+import static java.util.Objects.nonNull;
 
 @Service
 public class CustomerService {
@@ -31,15 +35,24 @@ public class CustomerService {
     @Autowired
     private SocialService socialService;
 
+    @Autowired
+    private ImageService imageService;
+
     //TODO: Need to implement saga pattern to rollback if any of the operations fail
-    public CustomerAccountResponseDTO registerCustomerAccount(CustomerAccountRequestDTO customerAccountRequestDTO) {
-        UUID userKeycloakId = keycloakUserService.registerUser(customerAccountRequestDTO);
-        Customer customer = mapToEntity(customerAccountRequestDTO, userKeycloakId);
-        Customer savedCustomer = customerRepository.save(customer);
+    public CustomerAccountResponseDTO registerCustomerAccount(CustomerAccountRequestDTO customerAccountRequestDTO, MultipartFile image) {
+        try {
+            UUID userKeycloakId = keycloakUserService.registerUser(customerAccountRequestDTO);
 
-        socialService.createProfile(userKeycloakId, keycloakUserService.getServiceAccountToken());
+            String urlPhoto = nonNull(image) ? imageService.uploadImage(image) : null;
+            Customer customer = mapToEntity(customerAccountRequestDTO, userKeycloakId, urlPhoto);
+            Customer savedCustomer = customerRepository.save(customer);
 
-        return mapToDTO(savedCustomer);
+            socialService.createProfile(userKeycloakId, keycloakUserService.getServiceAccountToken());
+
+            return mapToDTO(savedCustomer);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public CustomerAccountResponseDTO getCustomerAccountByKeycloakId(UUID keycloakId) {
@@ -94,34 +107,45 @@ public class CustomerService {
     }
 
     //TODO: Need to implement saga pattern to rollback if any of the operations fail
-    public CustomerAccountResponseDTO updateCustomerAccount(UUID keycloakId, UpdateCustomerAccountRequestDTO customerAccountRequestDTO) {
-        Customer customer = customerRepository.findByKeycloakId(keycloakId).orElseThrow(() -> new RuntimeException("User not found"));
-
-        customer.setFirstName(customerAccountRequestDTO.getFirstName());
-        customer.setLastName(customerAccountRequestDTO.getLastName());
-        customer.setEmail(customerAccountRequestDTO.getEmail());
-        customer.setUrlPhoto(customerAccountRequestDTO.getUrlPhoto());
-        customerRepository.save(customer);
-
+    public CustomerAccountResponseDTO updateCustomerAccount(UUID keycloakId, UpdateCustomerAccountRequestDTO customerAccountRequestDTO, MultipartFile image) {
         try {
+            Customer customer = customerRepository.findByKeycloakId(keycloakId).orElseThrow(() -> new RuntimeException("User not found"));
+
+            String urlPhoto = nonNull(image) ? imageService.uploadImage(image) : customer.getUrlPhoto();
+
+            String firstName = nonNull(customerAccountRequestDTO.getFirstName()) ? customerAccountRequestDTO.getFirstName() : customer.getFirstName();
+            String lastName = nonNull(customerAccountRequestDTO.getLastName()) ? customerAccountRequestDTO.getLastName() : customer.getLastName();
+            String email = nonNull(customerAccountRequestDTO.getEmail()) ? customerAccountRequestDTO.getEmail() : customer.getEmail();
+
+            customer.setFirstName(firstName);
+            customer.setLastName(lastName);
+            customer.setEmail(email);
+            customer.setUrlPhoto(urlPhoto);
+            customerRepository.save(customer);
+
             UserRepresentation userRepresentation = keycloakUserService.getUserById(keycloakId.toString());
-            userRepresentation.setFirstName(customerAccountRequestDTO.getFirstName());
-            userRepresentation.setLastName(customerAccountRequestDTO.getLastName());
-            userRepresentation.setEmail(customerAccountRequestDTO.getEmail());
+            userRepresentation.setFirstName(firstName);
+            userRepresentation.setLastName(lastName);
+            userRepresentation.setEmail(email);
             keycloakUserService.updateUser(keycloakId.toString(), userRepresentation);
+
+            if (nonNull(customerAccountRequestDTO.getPassword())) {
+                keycloakUserService.updateUserPassword(keycloakId, customerAccountRequestDTO.getPassword());
+            }
+
+            return mapToDTO(customer);
         } catch (Exception e) {
             throw new RuntimeException("Failed to update user in Keycloak: " + e.getMessage(), e);
         }
-
-        return mapToDTO(customer);
     }
 
-    private Customer mapToEntity(CustomerAccountRequestDTO customerAccountRequestDTO, UUID userKeycloakId) {
+    private Customer mapToEntity(CustomerAccountRequestDTO customerAccountRequestDTO, UUID userKeycloakId, String urlPhoto) {
         Customer customer = new Customer();
         customer.setKeycloakId(userKeycloakId);
         customer.setFirstName(customerAccountRequestDTO.getFirstName());
         customer.setLastName(customerAccountRequestDTO.getLastName());
         customer.setEmail(customerAccountRequestDTO.getEmail());
+        customer.setUrlPhoto(urlPhoto);
         return customer;
     }
 

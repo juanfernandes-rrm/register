@@ -4,6 +4,7 @@ import br.ufpr.tads.user.register.domain.exception.UserCreationException;
 import br.ufpr.tads.user.register.domain.request.CustomerAccountRequestDTO;
 import br.ufpr.tads.user.register.domain.request.StoreAccountRequestDTO;
 import br.ufpr.tads.user.register.domain.request.UserRegistrationRequestDTO;
+import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.UUID;
+
+import static java.util.Objects.nonNull;
 
 @Slf4j
 @Service
@@ -57,6 +60,18 @@ public class KeycloakUserService {
         } catch (Exception e) {
             log.error("Failed to update user with ID {}: {}", userId, e.getMessage());
             throw new RuntimeException("Failed to update user: " + e.getMessage(), e);
+        }
+    }
+
+    public void updateUserPassword(UUID keycloakId, String password) {
+        if (nonNull(password) && !password.isBlank()) {
+            try {
+                UserResource userResource = getUsersResource().get(keycloakId.toString());
+                userResource.resetPassword(createPasswordCredentials(password));
+                log.info("Senha do usuário atualizada com sucesso.");
+            } catch (ClientErrorException e) {
+                System.out.println("Erro ao atualizar a senha: " + e.getMessage());
+            }
         }
     }
 

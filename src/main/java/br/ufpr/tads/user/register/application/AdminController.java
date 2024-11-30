@@ -10,9 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -67,11 +69,13 @@ public class AdminController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN')")
-    @PutMapping("/customer/{keycloakId}")
-    public ResponseEntity<?> updateCustomer(@PathVariable("keycloakId") UUID keycloakId, @RequestBody UpdateCustomerAccountRequestDTO customerAccountRequestDTO) {
+    @PatchMapping(value = "/customer/{keycloakId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateCustomer(@PathVariable("keycloakId") UUID keycloakId,
+                                            @RequestPart UpdateCustomerAccountRequestDTO customerAccountRequestDTO,
+                                            @RequestPart(value = "image", required = false) MultipartFile image) {
         try {
             log.info("Updating customers {}", keycloakId);
-            customerService.updateCustomerAccount(keycloakId, customerAccountRequestDTO);
+            customerService.updateCustomerAccount(keycloakId, customerAccountRequestDTO, image);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Erro interno: " + e.getMessage());
