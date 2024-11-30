@@ -1,6 +1,7 @@
 package br.ufpr.tads.user.register.application;
 
 import br.ufpr.tads.user.register.domain.request.StoreAccountRequestDTO;
+import br.ufpr.tads.user.register.domain.request.UpdateStoreAccountRequestDTO;
 import br.ufpr.tads.user.register.domain.service.StoreService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -69,6 +73,25 @@ public class StoreAccountController {
             log.info("User registration failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
+    }
+
+    @PreAuthorize("hasAnyRole('STORE')")
+    @PatchMapping(path = "/store/{keycloakId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateStore(@RequestPart UpdateStoreAccountRequestDTO storeAccountRequestDTO,
+                                         @RequestPart(value = "image", required = false) MultipartFile image) {
+        try {
+            UUID user = getUser();
+            log.info("Updating store {}", user);
+            return ResponseEntity.ok(storeService.updateStoreAccount(user, storeAccountRequestDTO, image));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erro interno: " + e.getMessage());
+        }
+    }
+
+    private UUID getUser() {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        log.info("User: {}", jwt.getClaimAsString("preferred_username"));
+        return UUID.fromString(jwt.getSubject());
     }
 
 }
