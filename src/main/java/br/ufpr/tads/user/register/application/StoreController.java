@@ -77,4 +77,19 @@ public class StoreController {
         }
     }
 
+    @GetMapping("/{storeId}/branch")
+    public ResponseEntity<?> getBranches(@PathVariable UUID storeId,
+                                         @RequestParam("page") int page, @RequestParam("size") int size,
+                                         @RequestParam("sortDirection") Sort.Direction sortDirection,
+                                         @RequestParam("sortBy") String sortBy) {
+        try {
+            log.info("Getting branches");
+            Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+            return ResponseEntity.ok(storeService.getBranches(storeId, pageable));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erro interno: " + e.getMessage());
+        }
+    }
+
+
 }

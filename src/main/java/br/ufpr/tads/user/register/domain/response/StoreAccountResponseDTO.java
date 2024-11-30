@@ -23,7 +23,7 @@ public class StoreAccountResponseDTO {
         storeAccountResponseDTO.setApproved(store.getApproved());
         storeAccountResponseDTO.setName(store.getName());
         storeAccountResponseDTO.setEmail(store.getEmail());
-        storeAccountResponseDTO.setCnpj(store.getCNPJ());
+        storeAccountResponseDTO.setCnpj(store.getCnpjRoot());
         storeAccountResponseDTO.setUrlPhoto(store.getUrlPhoto());
         return storeAccountResponseDTO;
     }

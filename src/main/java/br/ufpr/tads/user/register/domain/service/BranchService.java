@@ -3,11 +3,13 @@ package br.ufpr.tads.user.register.domain.service;
 import br.ufpr.tads.user.register.domain.mapper.BranchMapper;
 import br.ufpr.tads.user.register.domain.model.Address;
 import br.ufpr.tads.user.register.domain.model.Branch;
+import br.ufpr.tads.user.register.domain.model.Store;
 import br.ufpr.tads.user.register.domain.repository.BranchRepository;
 import br.ufpr.tads.user.register.domain.response.BranchDTO;
-import br.ufpr.tads.user.register.domain.response.CoordinatesDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -43,6 +45,10 @@ public class BranchService {
 
         nearbyBranches.sort(Comparator.comparingDouble(BranchDTO::getDistance));
         return nearbyBranches;
+    }
+
+    public SliceImpl<Branch> getStoreBranch(Store store, Pageable pageable) {
+        return branchRepository.findByStore(store, pageable);
     }
 
 }

@@ -16,7 +16,7 @@ public class BranchMapper {
         StoreDTO storeDTO = new StoreDTO();
         storeDTO.setId(branch.getStore().getId());
         storeDTO.setName(branch.getStore().getName());
-        storeDTO.setCnpj(branch.getStore().getCNPJ());
+        storeDTO.setCnpj(branch.getStore().getCnpjRoot());
 
         Address address = branch.getAddress();
         AddressDTO addressDTO = new AddressDTO();

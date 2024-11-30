@@ -35,10 +35,13 @@ public class StoreService {
     private BranchRepository branchRepository;
 
     @Autowired
+    private BranchService branchService;
+
+    @Autowired
     private KeycloakUserService keycloakUserService;
 
     public StoreAccountResponseDTO registerStore(StoreAccountRequestDTO storeAccountRequestDTO) {
-        Optional<Store> optionalStore = storeRepository.findByCNPJ(storeAccountRequestDTO.getCnpj());
+        Optional<Store> optionalStore = storeRepository.findByCnpjRoot(storeAccountRequestDTO.getCnpj());
 
         if (optionalStore.isEmpty()) {
             UUID storeAccountId = keycloakUserService.registerUser(storeAccountRequestDTO);
@@ -65,17 +68,19 @@ public class StoreService {
 
     @Transactional
     public Branch createOrUpdateStore(StoreDTO storeDTO) {
-        Optional<Branch> existingBranch = branchRepository.findByCorrelationId(storeDTO.getId());
+        String cnpjRoot = extractCnpjRoot(storeDTO.getCnpj());
 
-        if (existingBranch.isPresent()) {
-            return existingBranch.get();
+        Optional<Store> existingStore = storeRepository.findByCnpjRoot(cnpjRoot);
+
+        if (existingStore.isPresent()) {
+            log.info("Store with CNPJ root {} already exists. Adding new branch with CNPJ {}", cnpjRoot, storeDTO.getCnpj());
+            return addNewBranchToExistingStore(existingStore.get(), storeDTO);
         }
 
-        Optional<Store> existingStore = storeRepository.findByCNPJ(storeDTO.getCnpj());
-
-        return existingStore.map(store -> addNewBranchToExistingStore(store, storeDTO))
-                .orElseGet(() -> createNewStoreWithBranch(storeDTO));
+        log.info("Store with CNPJ root {} does not exist. Creating new store with branch", cnpjRoot);
+        return createNewStoreWithBranch(storeDTO);
     }
+
 
     public BranchDTO getStoreBranch(UUID correlationId) {
         Optional<Branch> branchOptional = branchRepository.findByCorrelationId(correlationId);
@@ -171,6 +176,17 @@ public class StoreService {
         return updatedStoreAccountResponseDTO;
     }
 
+    public SliceImpl<BranchDTO> getBranches(UUID storeId, Pageable pageable) {
+        Store store = storeRepository.findById(storeId).orElseThrow(() -> new RuntimeException("Store not found with storeId: " + storeId));
+
+        SliceImpl<Branch> branchSlice = branchService.getStoreBranch(store, pageable);
+        List<BranchDTO> branchDTOList = branchSlice.stream()
+                .map(this::mapBranchToDTO)
+                .toList();
+
+        return new SliceImpl<>(branchDTOList, branchSlice.getPageable(), branchSlice.hasNext());
+    }
+
     private Branch addNewBranchToExistingStore(Store store, StoreDTO storeDTO) {
         Branch newBranch = convertToBranch(storeDTO);
         newBranch.setStore(store);
@@ -183,7 +199,7 @@ public class StoreService {
 
     private Branch createNewStoreWithBranch(StoreDTO storeDTO) {
         Store newStore = new Store();
-        newStore.setCNPJ(storeDTO.getCnpj());
+        newStore.setCnpjRoot(extractCnpjRoot(storeDTO.getCnpj()));
         newStore.setName(storeDTO.getName());
 
         Branch newBranch = convertToBranch(storeDTO);
@@ -197,7 +213,7 @@ public class StoreService {
 
     private Store createNewStoreWithoutBranch(StoreAccountRequestDTO storeDTO, UUID storeAccountId) {
         Store newStore = new Store();
-        newStore.setCNPJ(storeDTO.getCnpj());
+        newStore.setCnpjRoot(extractCnpjRoot(storeDTO.getCnpj()));
         newStore.setName(storeDTO.getName());
         newStore.setKeycloakId(storeAccountId);
         newStore.setEmail(storeDTO.getEmail());
@@ -208,6 +224,7 @@ public class StoreService {
 
     private Branch convertToBranch(StoreDTO storeDTO) {
         Branch branch = new Branch();
+
         AddressDTO addressDTO = storeDTO.getAddress();
         Address address = new Address();
         address.setStreet(addressDTO.getStreet());
@@ -218,6 +235,7 @@ public class StoreService {
 
         branch.setAddress(address);
         branch.setCorrelationId(storeDTO.getId());
+        branch.setCpnj(storeDTO.getCnpj());
         return branch;
     }
 
@@ -233,7 +251,7 @@ public class StoreService {
         Store store = branch.getStore();
         StoreDTO storeDTO = new StoreDTO();
         storeDTO.setId(store.getId());
-        storeDTO.setCnpj(store.getCNPJ());
+        storeDTO.setCnpj(store.getCnpjRoot());
         storeDTO.setName(store.getName());
         storeDTO.setAddress(addressDTO);
 
@@ -244,5 +262,13 @@ public class StoreService {
 
         return branchDTO;
     }
+
+    private String extractCnpjRoot(String cnpj) {
+        if (cnpj == null || cnpj.length() < 8) {
+            throw new IllegalArgumentException("CNPJ inválido: " + cnpj);
+        }
+        return cnpj.substring(0, 8);
+    }
+
 
 }

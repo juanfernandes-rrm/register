@@ -16,7 +16,7 @@ public class Store extends User {
     private String name;
 
     @Column(nullable = false, unique = true)
-    private String CNPJ;
+    private String cnpjRoot;
 
     @Column
     private Boolean approved;

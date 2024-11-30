@@ -16,6 +16,8 @@ public class Branch {
 
     private UUID correlationId;
 
+    private String cpnj;
+
     @ManyToOne
     @JoinColumn(name = "STORE_ID", nullable = false)
     @ToString.Exclude
