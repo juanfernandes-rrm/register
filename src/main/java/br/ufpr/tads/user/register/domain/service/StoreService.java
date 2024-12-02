@@ -75,18 +75,27 @@ public class StoreService {
     }
 
     @Transactional
-    public Branch createOrUpdateStore(StoreDTO storeDTO) {
+    public void createOrUpdateStore(StoreDTO storeDTO) {
         String cnpjRoot = extractCnpjRoot(storeDTO.getCnpj());
 
         Optional<Store> existingStore = storeRepository.findByCnpjRootWithLock(cnpjRoot);
 
         if (existingStore.isPresent()) {
-            log.info("Store with CNPJ root {} already exists. Adding new branch with CNPJ {}", cnpjRoot, storeDTO.getCnpj());
-            return addNewBranchToExistingStore(existingStore.get(), storeDTO);
+            log.info("Store with CNPJ root {} already exists.", cnpjRoot);
+
+            Optional<Branch> optionalBranch = branchRepository.findByCorrelationIdWithLock(storeDTO.getId());
+            if (optionalBranch.isEmpty()) {
+                log.info("Branch with correlationId {} does not exist. Adding new branch with CNPJ {} to existing store.",
+                        storeDTO.getId(), storeDTO.getCnpj());
+                addNewBranchToExistingStore(existingStore.get(), storeDTO);
+            }
+
+            log.info("Branch with correlationId {} already exists.", storeDTO.getId());
+            return;
         }
 
         log.info("Store with CNPJ root {} does not exist. Creating new store with branch", cnpjRoot);
-        return createNewStoreWithBranch(storeDTO);
+        createNewStoreWithBranch(storeDTO);
     }
 
 
